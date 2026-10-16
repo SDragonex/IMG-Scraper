@@ -23,7 +23,9 @@ ROLY_STEPS = [
 INBRIMA_STEPS = [
     195, 241, 242, 243, 244, 245, 247, 248, 249, 250, 251,
     294, 295, 296, 297, 298, 300, 301, 302, 303, 304,
-    306, 307, 308, 309, 310, 312, 313, 314, 315
+    306, 307, 308, 309, 310, 312, 313, 314, 315,
+    451, 452, 453, 454, 455, 457, 458, 459, 460, 461,
+    463, 464, 465, 466, 467
 ]
 
 with open(os.path.join(DOWNLOADS_DIR, "models_catalog.json"), "r", encoding="utf-8") as f:
@@ -92,39 +94,46 @@ def match_step_to_item(step_num, items):
         if it['id'] in html_text:
             return it
             
-    # Fallback: check title words similarity
-    soup = BeautifulSoup(html_text, "html.parser")
-    stitle = soup.title.string.lower() if soup.title else ""
-    for it in items:
-        words = [w.lower() for w in it['title'].split() if len(w) > 3]
-        if words and sum(w in stitle for w in words) >= max(2, len(words) // 2):
-            return it
-            
     return None
 
 def download_one_photo(img_id, target_file):
-    if os.path.exists(target_file) and os.path.getsize(target_file) > 1000:
+    # Check if we already have the FULL 1200px HD version (> 85 KB)
+    if os.path.exists(target_file) and os.path.getsize(target_file) > 85000:
         return True
         
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
+    
+    # Priority 1: Full 1200px zoom HD image
     candidates = [
-        f'https://http2.mlstatic.com/D_NQ_NP_{img_id}-O.jpg',
-        f'https://http2.mlstatic.com/D_NQ_NP_{img_id}-O.webp',
         f'https://http2.mlstatic.com/D_NQ_NP_2X_{img_id}-F.jpg',
+        f'https://http2.mlstatic.com/D_NQ_NP_{img_id}-F.jpg',
+        f'https://http2.mlstatic.com/D_NQ_NP_2X_{img_id}-O.jpg',
+        f'https://http2.mlstatic.com/D_NQ_NP_{img_id}-O.jpg',
         f'https://http2.mlstatic.com/D_NQ_NP_2X_{img_id}-F.webp',
-        f'https://http2.mlstatic.com/D_NQ_NP_{img_id}-F.jpg'
+        f'https://http2.mlstatic.com/D_NQ_NP_{img_id}-O.webp',
     ]
+    
+    best_data = None
     for cand in candidates:
         try:
             req = urllib.request.Request(cand, headers=headers)
             with urllib.request.urlopen(req, timeout=12) as resp:
                 data = resp.read()
-                if len(data) > 1000:
+                # If we got a full HD image (> 60KB), save and return immediately!
+                if len(data) > 60000:
                     with open(target_file, 'wb') as f_out:
                         f_out.write(data)
                     return True
+                elif len(data) > 1000 and best_data is None:
+                    best_data = data
         except Exception:
             continue
+            
+    if best_data:
+        with open(target_file, 'wb') as f_out:
+            f_out.write(best_data)
+        return True
+        
     return False
 
 # Collect tasks
@@ -203,7 +212,7 @@ with ThreadPoolExecutor(max_workers=16) as executor:
         done += 1
         if res:
             success += 1
-        if done % 30 == 0 or done == len(download_tasks):
+        if done % 40 == 0 or done == len(download_tasks):
             print(f"Downloaded {done}/{len(download_tasks)} photos (Success: {success})")
 
 # Save updated JSON catalog
@@ -214,14 +223,13 @@ with open(catalog_path, "w", encoding="utf-8") as f:
 # Save updated CSV catalog
 csv_path = os.path.join(DOWNLOADS_DIR, "models_catalog.csv")
 with open(csv_path, "w", encoding="utf-8", newline="") as f:
-    writer = csv.DictWriter(f, fieldnames=['category', 'id', 'title', 'price', 'photos_count', 'photos', 'link'])
+    writer = csv.DictWriter(f, fieldnames=['category', 'id', 'title', 'photos_count', 'photos', 'link'])
     writer.writeheader()
     for it in cat['inbrima']:
         writer.writerow({
             'category': 'Matchbox Inbrima',
             'id': it.get('id', ''),
             'title': it.get('title', ''),
-            'price': it.get('price', ''),
             'photos_count': it.get('photos_count', 0),
             'photos': ';'.join(it.get('photos', [])),
             'link': it.get('link', '')
@@ -231,10 +239,9 @@ with open(csv_path, "w", encoding="utf-8", newline="") as f:
             'category': 'Matchbox Roly Toys',
             'id': it.get('id', ''),
             'title': it.get('title', ''),
-            'price': it.get('price', ''),
             'photos_count': it.get('photos_count', 0),
             'photos': ';'.join(it.get('photos', [])),
             'link': it.get('link', '')
         })
 
-print("\nSuccessfully updated models_catalog.json and models_catalog.csv with multi-photo galleries!")
+print("\nSuccessfully updated models_catalog.json and models_catalog.csv with FULL HD galleries!")
