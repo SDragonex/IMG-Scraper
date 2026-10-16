@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+dump.html
+test_*.py
+.vscode/
+.idea/
