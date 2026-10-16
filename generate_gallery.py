@@ -2,7 +2,7 @@ import json
 import os
 import html
 
-BASE_DIR = r"c:\Users\d.chaker\Documents\antigravity\zealous-hopper"
+BASE_DIR = r"C:\Users\d.chaker\Documents\IMG-Scraper"
 DOWNLOADS_DIR = os.path.join(BASE_DIR, "downloads")
 CATALOG_PATH = os.path.join(DOWNLOADS_DIR, "models_catalog.json")
 
@@ -21,6 +21,7 @@ def generate_html(is_root=True):
     path_prefix = "downloads/" if is_root else ""
     csv_link = "downloads/models_catalog.csv" if is_root else "models_catalog.csv"
     json_link = "downloads/models_catalog.json" if is_root else "models_catalog.json"
+    jszip_link = "jszip.min.js"
 
     content = f"""<!DOCTYPE html>
 <html lang="cs">
@@ -28,6 +29,12 @@ def generate_html(is_root=True):
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Matchbox Inbrima & Roly Toys - Kompletní HD Fotogalerie</title>
+    <script src="{jszip_link}"></script>
+    <script>
+    if (typeof JSZip === 'undefined') {{
+        document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"><\\/script>');
+    }}
+    </script>
     <style>
         :root {{
             --bg-color: #0b1120;
@@ -329,15 +336,28 @@ def generate_html(is_root=True):
             border-radius: 8px;
             font-size: 13px;
             font-weight: 600;
-            text-decoration: none;
-            display: flex;
+            cursor: pointer;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
+            gap: 4px;
             transition: all 0.2s;
+            white-space: nowrap;
         }}
         .btn-card-dl:hover {{
             background: #10b981;
             color: #0f172a;
+            border-color: #10b981;
+        }}
+        .btn-card-dl.loading {{
+            background: rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
+            border-color: #f59e0b;
+            pointer-events: none;
+        }}
+        .btn-card-dl.done {{
+            background: rgba(16, 185, 129, 0.3);
+            color: #6ee7b7;
         }}
         .btn-ml-link {{
             padding: 9px 12px;
@@ -408,6 +428,7 @@ def generate_html(is_root=True):
             display: flex;
             align-items: center;
             gap: 8px;
+            flex-wrap: wrap;
         }}
         .toolbar-btn {{
             background: rgba(30, 41, 59, 0.9);
@@ -423,6 +444,7 @@ def generate_html(is_root=True):
             align-items: center;
             gap: 6px;
             transition: all 0.2s;
+            white-space: nowrap;
         }}
         .toolbar-btn:hover {{
             background: var(--accent);
@@ -432,6 +454,25 @@ def generate_html(is_root=True):
         .toolbar-btn.active {{
             background: var(--accent);
             color: #0f172a;
+        }}
+        .toolbar-btn-dl-all {{
+            background: rgba(16, 185, 129, 0.25);
+            color: #34d399;
+            border-color: #10b981;
+        }}
+        .toolbar-btn-dl-all:hover {{
+            background: #10b981;
+            color: #0f172a;
+        }}
+        .toolbar-btn-dl-all.loading {{
+            background: rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
+            border-color: #f59e0b;
+            pointer-events: none;
+        }}
+        .toolbar-btn-dl-all.done {{
+            background: rgba(16, 185, 129, 0.3);
+            color: #6ee7b7;
         }}
         .modal-close {{
             background: none;
@@ -475,10 +516,13 @@ def generate_html(is_root=True):
             transition: transform 0.2s;
         }}
         .modal-img.zoomed-100 {{
-            max-width: none;
-            max-height: none;
+            max-width: none !important;
+            max-height: none !important;
+            width: auto !important;
+            height: auto !important;
             cursor: zoom-out;
             margin: auto;
+            display: block;
         }}
         .modal-nav-btn {{
             position: absolute;
@@ -576,18 +620,18 @@ def generate_html(is_root=True):
             <a href="{json_link}" download class="export-btn" title="Stáhnout kompletní JSON metadata">📥 Stáhnout JSON</a>
         </div>
     </div>
-    <p class="subtitle">Kompletní HD fotokatalog vzácných brazilských modelů z Mercado Livre Brasil. Všechny fotografie staženy ve 100% plném rozlišení (1200px) s možností lupy na vyražené nápisy podvozku (baseplate).</p>
+    <p class="subtitle">Kompletní HD fotokatalog vzácných brazilských modelů z Mercado Livre Brasil. Všechny fotografie staženy ve 100% plném rozlišení (1200px) bez jakékoliv komprese. Tlačítkem <b>⬇ Stáhnout HD</b> můžete jedním kliknutím stáhnout všechny fotografie modelu v plné kvalitě (ZIP bez komprese). Použijte <b>🔍 100% lupu</b> v prohlížeči pro čtení vyražených čísel a textů na podvozku (Inbrima Manaus / Roly Toys).</p>
     
     <div class="stats-badge-row">
         <div class="stat-pill">Celkem v katalogu: <b>{len(inbrima_items) + len(roly_items)} modelů</b></div>
         <div class="stat-pill">S kompletní HD galerií: <b>{total_multi} inzerátů</b></div>
         <div class="stat-pill">HD fotografií na disku: <b>{total_photos} foto</b></div>
-        <div class="stat-pill">Matchbox Roly Toys: <b>{len(roly_items)} modelů</b> (100% full gallery)</div>
-        <div class="stat-pill">Matchbox Inbrima: <b>{len(inbrima_items)} modelů</b> ({multi_inbrima} s full gallery)</div>
+        <div class="stat-pill">Matchbox Roly Toys: <b>{len(roly_items)} modelů</b> ({multi_roly} s full multi-photo)</div>
+        <div class="stat-pill">Matchbox Inbrima: <b>{len(inbrima_items)} modelů</b> ({multi_inbrima} s full multi-photo)</div>
     </div>
 
     <div class="controls">
-        <input type="text" id="searchInput" class="search-box" placeholder="Hledat model (např. Scania, Interlagos, Bora, Corvette, DKW, Kombi, Mercedes, Crane, Tractor...)" onkeyup="filterCards()">
+        <input type="text" id="searchInput" class="search-box" placeholder="Hledat model (např. Scania, Interlagos, Bora, Corvette, DKW, Kombi, Mercedes, Crane, Tractor, Firebird, Porsche...)" onkeyup="filterCards()">
         <button class="filter-btn active" id="btn-all" onclick="setCategory('all')">Všechny ({len(inbrima_items) + len(roly_items)})</button>
         <button class="filter-btn" id="btn-roly_toys" onclick="setCategory('roly_toys')">Matchbox Roly Toys ({len(roly_items)})</button>
         <button class="filter-btn" id="btn-inbrima" onclick="setCategory('inbrima')">Matchbox Inbrima ({len(inbrima_items)})</button>
@@ -630,6 +674,9 @@ def generate_html(is_root=True):
         has_multi = "true" if num_photos > 1 else "false"
         multi_badge = f'<span class="badge-photos-count">📷 {num_photos} HD fotek</span>' if num_photos > 1 else '<span class="badge-photos-count">📷 1 foto</span>'
 
+        dl_label = f"⬇ Všech {num_photos} HD" if num_photos > 1 else "⬇ Stáhnout HD"
+        dl_title = f"Stáhnout všech {num_photos} fotografií v plné kvalitě (1200px originál bez komprese)" if num_photos > 1 else "Stáhnout fotografii v plné kvalitě (1200px originál)"
+
         return f"""
         <div class="card" id="card-{category}-{idx}" data-category="{category}" data-title="{title.lower()}" data-multi="{has_multi}" data-photos='{photos_json}' data-item-title="{title}" data-item-link="{link}">
             <div class="card-img-container" id="imgbox-{category}-{idx}">
@@ -643,7 +690,9 @@ def generate_html(is_root=True):
                 <div class="card-title" title="{title}">{title}</div>
                 <div class="card-footer">
                     <button class="btn-view-gallery" onclick="openLightbox('{category}', {idx}, 0)">Prohlédnout HD ({num_photos})</button>
-                    <a href="{first_photo}" download id="dl-btn-{category}-{idx}" class="btn-card-dl" title="Stáhnout aktuální fotografii">⬇</a>
+                    <button id="dl-btn-{category}-{idx}" class="btn-card-dl" onclick="downloadAllCardPhotos('{category}', {idx}, event)" title="{dl_title}">
+                        {dl_label}
+                    </button>
                     <a href="{link}" target="_blank" class="btn-ml-link" rel="noopener noreferrer" title="Původní inzerát na Mercado Livre">ML ↗</a>
                 </div>
             </div>
@@ -672,9 +721,10 @@ def generate_html(is_root=True):
             <div class="modal-counter" id="modalCounter">Foto 1 z 10</div>
         </div>
         <div class="modal-toolbar">
-            <button class="toolbar-btn" id="btnZoom" onclick="toggleZoom()" title="Klikněte pro 100% zobrazení pixelů (skvělé pro baseplate)">🔍 100% Lupa (Baseplate)</button>
+            <button class="toolbar-btn" id="btnZoom" onclick="toggleZoom()" title="Klikněte pro 100% zobrazení pixelů (skvělé pro zkoumání podvozku/baseplate)">🔍 100% Lupa (Baseplate)</button>
             <a href="" target="_blank" id="btnOpenFull" class="toolbar-btn" title="Otevřít originální soubor v plném rozlišení v nové záložce">↗ Originál HD</a>
-            <a href="" download id="btnModalDownload" class="toolbar-btn" style="background: rgba(16, 185, 129, 0.2); color: #34d399; border-color: #10b981;" title="Stáhnout fotografii v plné kvalitě">⬇ Stáhnout foto</a>
+            <a href="" download id="btnModalDownload" class="toolbar-btn" title="Stáhnout toto konkrétní foto v plné kvalitě">⬇ Toto foto</a>
+            <button id="btnModalDownloadAll" class="toolbar-btn toolbar-btn-dl-all" onclick="downloadAllActiveModalPhotos(event)" title="Stáhnout všechny fotografie tohoto modelu v plné kvalitě (ZIP bez komprese)">⬇ Všech <span id="modalDlCount">1</span> HD (ZIP)</button>
             <button class="modal-close" onclick="closeLightbox(event)">✕</button>
         </div>
     </div>
@@ -747,7 +797,6 @@ function prevCardPhoto(category, idx, event) {
     cur = (cur - 1 + photos.length) % photos.length;
     cardPhotoIndices[key] = cur;
     document.getElementById(`card-img-${key}`).src = photos[cur];
-    document.getElementById(`dl-btn-${key}`).href = photos[cur];
     updateCardBadge(card, cur, photos.length);
 }
 
@@ -760,7 +809,6 @@ function nextCardPhoto(category, idx, event) {
     cur = (cur + 1) % photos.length;
     cardPhotoIndices[key] = cur;
     document.getElementById(`card-img-${key}`).src = photos[cur];
-    document.getElementById(`dl-btn-${key}`).href = photos[cur];
     updateCardBadge(card, cur, photos.length);
 }
 
@@ -778,6 +826,7 @@ function openLightbox(category, idx, photoIndex) {
     activeModalIndex = photoIndex || cardPhotoIndices[key] || 0;
     
     document.getElementById('modalTitle').innerText = card.getAttribute('data-item-title');
+    document.getElementById('modalDlCount').innerText = activeModalPhotos.length;
     document.getElementById('lightboxModal').classList.add('active');
     
     resetZoom();
@@ -791,6 +840,7 @@ function renderModalPhoto() {
     document.getElementById('modalCounter').innerText = `HD Fotografie ${activeModalIndex + 1} z ${activeModalPhotos.length}`;
     document.getElementById('btnOpenFull').href = curSrc;
     document.getElementById('btnModalDownload').href = curSrc;
+    document.getElementById('modalDlCount').innerText = activeModalPhotos.length;
     
     resetZoom();
 
@@ -875,6 +925,139 @@ window.addEventListener('keydown', (e) => {
         if (e.key === 'z' || e.key === 'Z') toggleZoom();
     }
 });
+
+// Drag to pan in 100% zoom
+let isPanning = false;
+let startX = 0, startY = 0, scrollLeft = 0, scrollTop = 0;
+const modalArea = document.getElementById('modalContentArea');
+modalArea.addEventListener('mousedown', (e) => {
+    if (!isZoomed || e.target.tagName === 'BUTTON') return;
+    isPanning = true;
+    modalArea.style.cursor = 'grabbing';
+    startX = e.pageX - modalArea.offsetLeft;
+    startY = e.pageY - modalArea.offsetTop;
+    scrollLeft = modalArea.scrollLeft;
+    scrollTop = modalArea.scrollTop;
+});
+window.addEventListener('mouseup', () => {
+    isPanning = false;
+    if (isZoomed && modalArea) modalArea.style.cursor = 'grab';
+});
+modalArea.addEventListener('mousemove', (e) => {
+    if (!isPanning || !isZoomed) return;
+    e.preventDefault();
+    const x = e.pageX - modalArea.offsetLeft;
+    const y = e.pageY - modalArea.offsetTop;
+    modalArea.scrollLeft = scrollLeft - (x - startX);
+    modalArea.scrollTop = scrollTop - (y - startY);
+});
+
+// Multi-photo download functions (raw uncompressed binary preservation)
+function sanitizeFileName(name) {
+    return name.replace(/[\\\\/*?:"<>|]/g, '').replace(/\\s+/g, '_').substring(0, 50);
+}
+
+async function downloadPhotosAsZip(photos, title, btn) {
+    if (!photos || photos.length === 0) return;
+    const origHtml = btn ? btn.innerHTML : '';
+    
+    // Single photo: download direct raw file
+    if (photos.length === 1) {
+        const link = document.createElement('a');
+        link.href = photos[0];
+        const ext = photos[0].split('.').pop().split('?')[0] || 'jpg';
+        link.download = `${sanitizeFileName(title)}_01.${ext}`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        return;
+    }
+
+    // Multiple photos: package in uncompressed STORE ZIP
+    if (btn) {
+        btn.classList.add('loading');
+        btn.innerHTML = `⏳ 0/${photos.length}`;
+    }
+
+    try {
+        if (typeof JSZip === 'undefined') {
+            alert('Knihovna pro balení archivu se ještě načítá, zkuste to prosím za vteřinu.');
+            if (btn) {
+                btn.classList.remove('loading');
+                btn.innerHTML = origHtml;
+            }
+            return;
+        }
+
+        const zip = new JSZip();
+        for (let i = 0; i < photos.length; i++) {
+            if (btn) btn.innerHTML = `⏳ ${i+1}/${photos.length}`;
+            const response = await fetch(photos[i]);
+            if (!response.ok) throw new Error(`Chyba načítání: ${photos[i]}`);
+            const blob = await response.blob();
+            const ext = photos[i].split('.').pop().split('?')[0] || 'jpg';
+            const fname = `${sanitizeFileName(title)}_${String(i+1).padStart(2, '0')}.${ext}`;
+            zip.file(fname, blob, {binary: true});
+        }
+
+        if (btn) btn.innerHTML = `⏳ Balení...`;
+        // compression: 'STORE' preserves exact original 1200px binary bytes without any compression
+        const zipContent = await zip.generateAsync({type: 'blob', compression: 'STORE'});
+        
+        const url = URL.createObjectURL(zipContent);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${sanitizeFileName(title)}_HD.zip`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        if (btn) {
+            btn.classList.remove('loading');
+            btn.classList.add('done');
+            btn.innerHTML = `✅ Staženo!`;
+            setTimeout(() => {
+                btn.classList.remove('done');
+                btn.innerHTML = origHtml;
+            }, 2500);
+        }
+    } catch (err) {
+        console.error("Chyba při stahování fotografií:", err);
+        if (btn) {
+            btn.classList.remove('loading');
+            btn.innerHTML = origHtml;
+        }
+        // Fallback: trigger sequential downloads
+        photos.forEach((src, idx) => {
+            setTimeout(() => {
+                const a = document.createElement('a');
+                a.href = src;
+                a.download = `${sanitizeFileName(title)}_${idx+1}.jpg`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            }, idx * 350);
+        });
+    }
+}
+
+function downloadAllCardPhotos(category, idx, event) {
+    event.stopPropagation();
+    const key = `${category}-${idx}`;
+    const card = document.getElementById(`card-${key}`);
+    const photos = JSON.parse(card.getAttribute('data-photos'));
+    const title = card.getAttribute('data-item-title');
+    const btn = document.getElementById(`dl-btn-${key}`);
+    downloadPhotosAsZip(photos, title, btn);
+}
+
+function downloadAllActiveModalPhotos(event) {
+    if (event) event.stopPropagation();
+    const title = document.getElementById('modalTitle').innerText;
+    const btn = document.getElementById('btnModalDownloadAll');
+    downloadPhotosAsZip(activeModalPhotos, title, btn);
+}
 
 // Scroll to top button visibility
 window.addEventListener('scroll', () => {

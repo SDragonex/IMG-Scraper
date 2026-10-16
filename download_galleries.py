@@ -9,7 +9,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 sys.stdout.reconfigure(encoding='utf-8')
 
-BASE_DIR = r"c:\Users\d.chaker\Documents\antigravity\zealous-hopper"
+BASE_DIR = r"C:\Users\d.chaker\Documents\IMG-Scraper"
 STEPS_DIR = r"C:\Users\d.chaker\.gemini\antigravity\brain\bbba99da-072a-4764-8b5c-146459d2ce18\.system_generated\steps"
 DOWNLOADS_DIR = os.path.join(BASE_DIR, "downloads")
 INBRIMA_DIR = os.path.join(DOWNLOADS_DIR, "matchbox_inbrima")
@@ -25,7 +25,11 @@ INBRIMA_STEPS = [
     294, 295, 296, 297, 298, 300, 301, 302, 303, 304,
     306, 307, 308, 309, 310, 312, 313, 314, 315,
     451, 452, 453, 454, 455, 457, 458, 459, 460, 461,
-    463, 464, 465, 466, 467
+    463, 464, 465, 466, 467,
+    511, 512, 513, 514, 515, 517, 518, 519, 520, 521,
+    538, 540, 542, 544, 548, 550, 552, 556, 558, 560,
+    562, 564, 566,
+    607, 609, 611, 613, 615, 617, 619
 ]
 
 with open(os.path.join(DOWNLOADS_DIR, "models_catalog.json"), "r", encoding="utf-8") as f:
